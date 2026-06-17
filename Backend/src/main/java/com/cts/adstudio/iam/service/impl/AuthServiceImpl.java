@@ -43,11 +43,15 @@ public class AuthServiceImpl implements AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .phone(request.getPhone())
                 .role(request.getRole())
-                .accountId(request.getAccountId())
+//                .accountId(request.getUserId()) // this should be generated automatically
                 .status(request.getStatus() != null ? request.getStatus() : UserStatus.ACTIVE)
                 .build();
 
-        User saved = userRepository.save(user);
+
+        User savedTemp = userRepository.save(user);  // INSERT -> userId assigned automatically by MySQL
+        savedTemp.setAccountId(savedTemp.getUserId());   // account_id = user_id
+        User saved =  userRepository.save(savedTemp);
+
         log.info("Registered user id={} email={} role={}", saved.getUserId(), saved.getEmail(), saved.getRole());
 
         auditLogService.record(saved.getUserId(), "REGISTER_USER", "User");
