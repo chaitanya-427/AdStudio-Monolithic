@@ -21,7 +21,7 @@ public class DeliveryRecordResponse {
     private Long deliveredImpressions;
     private Long clicks;
     private BigDecimal spend;
-    private BigDecimal ctr;
+    private BigDecimal ctr; 
     private String source;
     private String status;
     private LocalDateTime createdAt;

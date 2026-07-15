@@ -8,7 +8,11 @@ import java.util.List;
 
 @Entity
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = {"assetName","brandId"}))
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter 
+@Setter 
+@NoArgsConstructor 
+@AllArgsConstructor 
+@Builder //reduces boilerplate code for object creation
 public class CreativeAsset {
 
     @Id

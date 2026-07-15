@@ -12,15 +12,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
-/**
- * REST surface for pacing exceptions (spec 4.6 &mdash; PacingAlert).
- *
- * <p>The media planner triggers an evaluation by posting the planned targets for
- * a line item; Delivery compares them against its own accepted actuals and raises
- * under/over-delivery, budget-exhausted, and flight-end-approaching alerts. Alerts
- * can then be listed and moved through their workflow (Open &rarr; Actioned &rarr; Closed).</p>
- */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/delivery/pacing-alerts")
