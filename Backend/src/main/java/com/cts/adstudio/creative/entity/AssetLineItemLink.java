@@ -16,5 +16,6 @@ public class AssetLineItemLink {
 
     @ManyToOne
     @JoinColumn(name = "asset_id")
+    
     private CreativeAsset asset;
 }

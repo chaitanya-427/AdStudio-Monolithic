@@ -8,15 +8,17 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/api/creative-approvals")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('CREATIVE_MANAGER','ADMIN')")
 public class CreativeApprovalController {
 
     private final CreativeService service;
 
-    // ✅ ONLY APPROVAL API ✅
+    // ONLY APPROVAL API
     @PostMapping
     public ResponseEntity<?> approve(@Valid @RequestBody ApprovalRequest req) {
 

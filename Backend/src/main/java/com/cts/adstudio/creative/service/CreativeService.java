@@ -3,6 +3,7 @@ package com.cts.adstudio.creative.service;
 import com.cts.adstudio.creative.entity.*;
 import com.cts.adstudio.creative.repository.*;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
@@ -13,13 +14,14 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class CreativeService {
 
     private final CreativeAssetRepository assetRepo;
     private final CreativeApprovalRepository approvalRepo;
     private final AssetLineItemLinkRepository linkRepo;
 
-    // ✅ ✅ ✅ UPLOAD
+    //UPLOAD
     public CreativeAsset uploadManual(
             MultipartFile file,
             Long brandId,
@@ -55,7 +57,7 @@ public class CreativeService {
 
         return assetRepo.save(asset);
     }
-
+    //Approval
     public CreativeApproval approve(Long assetId, String decision) {
 
     CreativeAsset asset = assetRepo.findById(assetId)
@@ -67,7 +69,7 @@ public class CreativeService {
         asset.setStatus(CreativeAsset.Status.Rejected);
     }
 
-    // ✅ IMPORTANT — SAVE UPDATED ASSET
+    // IMPORTANT — SAVE UPDATED ASSET
     assetRepo.save(asset);
 
     CreativeApproval approval = CreativeApproval.builder()
@@ -78,18 +80,18 @@ public class CreativeService {
     return approvalRepo.save(approval);
 }
 
-    // ✅ ✅ ✅ LINK (FIXED)
+    //LINK
     public AssetLineItemLink link(Long assetId, Long lineItemId) {
 
         CreativeAsset asset = assetRepo.findById(assetId)
                 .orElseThrow(() -> new RuntimeException("Asset not found"));
 
-        // ✅ check approved
+        // check approved
         if (asset.getStatus() != CreativeAsset.Status.Approved) {
             throw new RuntimeException("Asset must be approved before linking");
         }
 
-        // ✅ prevent duplicates
+        // prevent duplicates
         if (linkRepo.existsByAssetAndLineItemId(asset, lineItemId)) {
             throw new RuntimeException("Duplicate link not allowed");
         }
@@ -102,8 +104,75 @@ public class CreativeService {
         return linkRepo.save(link);
     }
 
-    // ✅ ✅ ✅ GET ALL
+    //GET ALL
     public List<CreativeAsset> getAll() {
         return assetRepo.findAll();
     }
+ public CreativeAsset updateWithFile(
+        Long assetId,
+        MultipartFile file,
+        String assetName,
+        CreativeAsset.AssetType assetType,
+        Integer width,
+        Integer height
+) throws Exception {
+
+    CreativeAsset asset = assetRepo.findById(assetId)
+            .orElseThrow(() -> new RuntimeException("Asset not found"));
+
+    //Step 1: Update metadata
+    asset.setAssetName(assetName);
+    asset.setAssetType(assetType);
+    asset.setWidth(width);
+    asset.setHeight(height);
+
+    // Step 2: Handle file re-upload
+    if (file != null && !file.isEmpty()) {
+
+        String dirPath = System.getProperty("user.dir") + "/Backend/creative/uploads/";
+
+        File dir = new File(dirPath);
+        if (!dir.exists()) dir.mkdirs();
+
+        // Step 3: DELETE OLD FILE
+        if (asset.getFilePath() != null) {
+            File oldFile = new File(asset.getFilePath());
+
+            if (oldFile.exists()) {
+                boolean deleted = oldFile.delete();
+
+                if (!deleted) {
+                    System.out.println("Old file could not be deleted: " + asset.getFilePath());
+                }
+            }
+        }
+
+        //Step 4: Save new file
+        String fileName = System.currentTimeMillis() + "_" +
+                file.getOriginalFilename().replaceAll("\\s+", "_");
+
+        String filePath = dirPath + fileName;
+
+        file.transferTo(new File(filePath));
+
+        // Step 5: Update path
+        asset.setFilePath(filePath);
+
+        // OPTIONAL: Versioning
+        // asset.setVersion(asset.getVersion() == null ? 1 : asset.getVersion() + 1);
+    }
+
+    return assetRepo.save(asset);
+}  
+public void delete(Long assetId) {
+
+    CreativeAsset asset = assetRepo.findById(assetId)
+            .orElseThrow(() -> new RuntimeException("Asset not found"));
+
+    if (!asset.getLinks().isEmpty()) {
+        throw new RuntimeException("Cannot delete asset linked to campaigns");
+    }
+
+    assetRepo.delete(asset);
+}
 }
